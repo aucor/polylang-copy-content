@@ -2,7 +2,7 @@
 /*
 Plugin Name: Polylang Copy Content
 Plugin URI: 
-Version: 1.0
+Version: 0.1.0
 Author: Aucor Oy, leemon
 Author URI: https://github.com/aucor
 Description: Copy content and title when creating a new translation in Polylang
