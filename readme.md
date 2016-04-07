@@ -1,7 +1,11 @@
 # Polylang Copy Content
 
 **Contributors:** [Teemu Suoranta](https://github.com/TeemuSuoranta), [leemon](https://github.com/theleemon) (this plugin uses bits from  [Sync Attachments for Polylang](https://github.com/theleemon/sync-attachments-for-polylang))
+
+
 **Tags:** polylang, media, attachments, admin, copy, content
+
+
 **License:** GPLv2 or later
 
 ## Description
@@ -38,6 +42,7 @@ Download and activate. That's it. You will need Polylang first (d'oh).
 
  
  **Feature whishlist:**
+
  * UI to handel wheteher you want to copy things and choose the language
  * Making the plugin itself translatable
  * Ability to copy images to translation after translation has been created (if new images are added to the original version)
