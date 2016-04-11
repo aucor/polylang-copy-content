@@ -5,7 +5,7 @@ Plugin URI:
 Version: 0.1.0
 Author: Aucor Oy, leemon
 Author URI: https://github.com/aucor
-Description: Copy content and title when creating a new translation in Polylang
+Description: Copy content, title and attachments when creating a new translation in Polylang
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Text Domain: polylang-copy-content
@@ -17,6 +17,8 @@ class PolylangCopyContent {
 	 * Constructor
 	 */
 	public function __construct() {
+
+		// Check that Polylang is active
 		global $polylang;
 		
 		if (isset($polylang)) {
@@ -64,7 +66,11 @@ class PolylangCopyContent {
 			// copy featured image
 			$this->copy_featured_image($post, $from_post_id, $new_lang->slug);
 
+			// copy all images attached to post
+			$this->copy_attached_media($post, $from_post_id, $new_lang->slug);
+
 			// show notice
+			// @TODO: create UI for undo
 			add_action( 'admin_notices', function() {
 				$from_post_id = (int) $_GET['from_post'];
 			    ?>
@@ -91,7 +97,6 @@ class PolylangCopyContent {
 		if(PLL()->model->options['media_support']) {
 			add_filter('polylang_addon_copy_content_filter_img', array(&$this, 'replace_content_img'), 10, 3);
 			add_filter('polylang_addon_copy_content_filter_caption', array(&$this, 'replace_content_caption'), 10, 3);
-			add_filter('polylang_addon_copy_content_filter_caption_txt', array(&$this, 'tif_add_credit'), 10, 3);
 			add_filter('polylang_addon_copy_content_filter_gallery', array(&$this, 'replace_content_gallery'), 10, 3);
 
 			$content = apply_filters( 'polylang_addon_copy_content_filter_img', $content, $post, $new_lang_slug );
@@ -361,8 +366,41 @@ class PolylangCopyContent {
 	}
 
 	/**
-	 * Translate attachment
+	 * Copy all attached media
 	 *
+	 * Media is translated already from content and featured image but there might be more
+	 *
+	 * @param obj post new post object
+	 * @param int ID of the post we copy from
+	 * @param string slug of the new translation language
+	 *
+	 */
+
+	function copy_attached_media($post, $from_post_id, $new_lang_slug) {
+
+		if(PLL()->model->options['media_support']) {
+
+			$from_lang = pll_get_post_language($from_post_id, 'slug');
+				$args = array( 
+					'post_type' => 'attachment',
+					'posts_per_page' => -1,
+					'no_found_rows' => true,
+					'parent' => $from_post_id,
+					'post_status' => null,
+					'lang' => $from_lang,
+				);
+				$attachments = new WP_Query( $args );
+			while ( $attachments->have_posts() ) : $attachments->the_post();
+				// attachments are translated only once so don't worry about this
+				translate_attachment(get_the_ID(), $new_lang_slug, $post->ID);
+			endwhile;
+			wp_reset_query();
+		}
+
+	}
+
+	/**
+	 * Translate attachment
 	 *
 	 * @param int $attachment_id id of the attachment in original language
 	 * @param string $new_lang new language slug
@@ -384,7 +422,7 @@ class PolylangCopyContent {
 		$post->ID = null; // will force the creation
 		$post->post_parent = $parent_id ? $parent_id : 0;
 
-		// Append language code to caption and excerpt
+		// Append language code to caption (excerpt)
 		$append_str = ' (' . $new_lang . ' translation)';
 		$post->post_excerpt = empty($post->post_excerpt) ? '' : $post->post_excerpt . $append_str;
 
@@ -420,7 +458,6 @@ class PolylangCopyContent {
 	function wp_generate_attachment_metadata( $metadata, $attachment_id ) {
 
 		$attachment_lang = PLL()->model->post->get_language($attachment_id);
-		
 		$translations = PLL()->model->post->get_translations($attachment_id);
 
 		foreach ($translations as $lang => $tr_id) {
