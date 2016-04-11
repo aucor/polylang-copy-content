@@ -95,13 +95,10 @@ class PolylangCopyContent {
 
 		// if media is translatable, replace media in content with translated versions
 		if(PLL()->model->options['media_support']) {
-			add_filter('polylang_addon_copy_content_filter_img', array(&$this, 'replace_content_img'), 10, 3);
-			add_filter('polylang_addon_copy_content_filter_caption', array(&$this, 'replace_content_caption'), 10, 3);
-			add_filter('polylang_addon_copy_content_filter_gallery', array(&$this, 'replace_content_gallery'), 10, 3);
-
-			$content = apply_filters( 'polylang_addon_copy_content_filter_img', $content, $post, $new_lang_slug );
-			$content = apply_filters( 'polylang_addon_copy_content_filter_caption', $content, $post, $new_lang_slug );
-			$content = apply_filters( 'polylang_addon_copy_content_filter_gallery', $content, $post, $new_lang_slug );
+			add_filter('polylang_addon_copy_content_filter_content', array(&$this, 'replace_content_img'), 10, 3);
+			add_filter('polylang_addon_copy_content_filter_content', array(&$this, 'replace_content_caption'), 10, 3);
+			add_filter('polylang_addon_copy_content_filter_content', array(&$this, 'replace_content_gallery'), 10, 3);
+			$content = apply_filters( 'polylang_addon_copy_content_filter_content', $content, $post, $new_lang_slug );
 		}
 
 		return $content;
