@@ -64,10 +64,3 @@ $ composer aucor/polylang-copy-content
  * Ability to copy images to translation after translation has been created (if new images are added to the original version)
  * Undo copying (remove image translations)
  * ~~:star::star: Get integrated to Polylang :star::star:~~ Polylang Pro has similar function that was build unknowingly of this plugin.
-
-## Changelog
-
-### 0.1.0 - Github launch
- * Basics working
- * No UI
- * Needs work before going to WordPress.org
