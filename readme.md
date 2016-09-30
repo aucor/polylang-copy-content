@@ -29,15 +29,32 @@ Basic feature list:
 
 Download and activate. That's it. You will need Polylang, too (d'oh).
 
+**Composer:**
+```
+$ composer aucor/polylang-copy-content
+```
+**With composer.json:**
+```
+{
+  "require": {
+    "aucor/polylang-copy-content": "*"
+  },
+  "extra": {
+    "installer-paths": {
+      "htdocs/wp-content/plugins/{$name}/": ["type:wordpress-plugin"]
+    }
+  }
+}
+```
 
 ## Issues and feature whishlist
 
 **Issues:**
 
  * Translating a link to a featured media page seems to make a broken link sometimes.
- * HTML is parsed with regex. [This might be a problem.](http://stackoverflow.com/a/1732454) I will use PHP Simple HTML DOM Parser for HTML elements in the future and use regex for shortcodes.
+ * HTML is parsed with regex. [This might be a problem.](http://stackoverflow.com/a/1732454) ~~I will use PHP Simple HTML DOM Parser for HTML elements in the future and use regex for shortcodes~~. DOM Parsers bring new problems, let's not.
  * Translating featured image is somehow broken. The image can be translated and placed but if you'll try to edit the captions before the translation has been saved the first time the correct image is not selected in the media gallery. After you have saved it will work as it should.
- * Adding translation markup (fr translation) might be someting everybody won't like. Maybe I should drop this in future or make it optional.
+ * Adding translation markup (fr translation) might be someting everybody won't like. Maybe I should ~~drop this in future or~~ make it optional.
 
  
  **Feature whishlist:**
@@ -46,7 +63,7 @@ Download and activate. That's it. You will need Polylang, too (d'oh).
  * Making the plugin itself translatable
  * Ability to copy images to translation after translation has been created (if new images are added to the original version)
  * Undo copying (remove image translations)
- * :star::star: Get integrated to Polylang :star::star:
+ * ~~:star::star: Get integrated to Polylang :star::star:~~ Polylang Pro has similar function that was build unknowingly of this plugin.
 
 ## Changelog
 
