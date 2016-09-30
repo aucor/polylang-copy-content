@@ -1,0 +1,13 @@
+{
+	"name": "aucor/polylang-copy-content",
+	"description": "Copy content, title and attachments when creating a new translation with Polylang in WordPress",
+	"license": "GPLv2 or later",
+	"type": "wordpress-plugin",
+	"homepage": "https://github.com/aucor/polylang-copy-content",
+	"authors": [
+		{
+			"name": "Teemu Suoranta",
+			"email": "teemu@aucor.fi"
+		}
+	]
+}
