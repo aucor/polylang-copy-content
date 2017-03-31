@@ -31,7 +31,7 @@ Download and activate. That's it. You will need Polylang, too (d'oh).
 
 **Composer:**
 ```
-$ composer aucor/polylang-copy-content
+$ composer require aucor/polylang-copy-content
 ```
 **With composer.json:**
 ```
