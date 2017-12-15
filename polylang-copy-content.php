@@ -2,7 +2,7 @@
 /*
 Plugin Name: Polylang Copy Content
 Plugin URI: 
-Version: 0.1.1
+Version: 0.1.2
 Author: Aucor Oy, leemon
 Author URI: https://github.com/aucor
 Description: Copy content, title and attachments when creating a new translation in Polylang
@@ -46,6 +46,13 @@ class PolylangCopyContent {
 
 			if(!empty($post->post_content)) {
 				return; // post content not empty, let's not mess with it
+			}
+
+			// if Polylang Pro and content duplication is active, don't do anything
+			$duplicate_options = get_user_meta( get_current_user_id(), 'pll_duplicate_content', true );
+			$is_polylang_pro_duplication_active = ! empty( $duplicate_options ) && ! empty( $duplicate_options[ $post_type ] );
+			if($is_polylang_pro_duplication_active) {
+				return; // Polylang Pro will handle content duplication
 			}
 
 			$from_post_id = (int) $_GET['from_post'];
@@ -389,7 +396,7 @@ class PolylangCopyContent {
 				$attachments = new WP_Query( $args );
 			while ( $attachments->have_posts() ) : $attachments->the_post();
 				// attachments are translated only once so don't worry about this
-				translate_attachment(get_the_ID(), $new_lang_slug, $post->ID);
+				$this->translate_attachment(get_the_ID(), $new_lang_slug, $post->ID);
 			endwhile;
 			wp_reset_query();
 		}
@@ -408,6 +415,11 @@ class PolylangCopyContent {
 	function translate_attachment($attachment_id, $new_lang, $parent_id) {
 
 		$post = get_post($attachment_id);
+
+		if(empty($post) || is_wp_error($post) || !in_array($post->post_type, array('attachment'))) {
+			return $attachment_id;
+		}
+
 		$post_id = $post->ID;
 
 		// if there's existing translation, use it
