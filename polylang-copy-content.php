@@ -484,5 +484,7 @@ class PolylangCopyContent {
 
 }
 
-add_action('plugins_loaded', create_function('', 'global $polylang_copy_content; $polylang_copy_content = new PolylangCopyContent();'));
-
+add_action('plugins_loaded', function () {
+    global $polylang_copy_content;
+    $polylang_copy_content = new PolylangCopyContent();
+} );
