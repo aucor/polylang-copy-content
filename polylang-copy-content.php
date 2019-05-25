@@ -2,7 +2,7 @@
 /*
 Plugin Name: Polylang Copy Content
 Plugin URI: https://github.com/aucor/polylang-copy-content
-Version: 0.1.4
+Version: 1.0.0
 Author: Aucor Oy, leemon
 Author URI: https://github.com/aucor
 Description: Copy content, title and attachments when creating a new translation in Polylang
@@ -22,7 +22,8 @@ class PolylangCopyContent {
     global $polylang;
 
     if (isset($polylang)) {
-      add_action('add_meta_boxes', array(&$this, 'copy_content_and_title'), 6, 2); // use this action because of parameters
+      add_action('rest_api_init', array(&$this, 'copy_content_and_title'), 2 ); // gutenberg
+      add_action('add_meta_boxes', array(&$this, 'copy_content_and_title'), 5); // classic editor
       add_filter('wp_generate_attachment_metadata', array(&$this, 'wp_generate_attachment_metadata'), 10, 2);
     }
   }
@@ -36,10 +37,16 @@ class PolylangCopyContent {
    * @param obj post the new translated post
    *
    */
-  function copy_content_and_title($post_type, $post) {
+  function copy_content_and_title() {
 
     // copying is done only when new translation is created
     if ($GLOBALS['pagenow'] == 'post-new.php' && isset($_GET['from_post'], $_GET['new_lang'])) {
+
+      global $post;
+
+      if (!($post instanceof WP_Post)) {
+        return; // invalid post object
+      }
 
       if (!PLL()->model->is_translated_post_type($post->post_type))
         return; // post type not translatable
@@ -156,6 +163,8 @@ class PolylangCopyContent {
       $img_and_meta[$i]['id'] = (int) $id_temp[1];
 
       $attachment = get_post($img_and_meta[$i]['id']);
+
+      // @todo HTML comment
 
       // check if given ID is really attachment (or copied from some other WordPress)
       if(empty($attachment) || $attachment->post_type !== 'attachment')
@@ -322,6 +331,9 @@ class PolylangCopyContent {
       foreach ($gallery_ids_array as $id) {
         array_push($gallery_ids_new_array, $this->translate_attachment($id, $new_lang_slug, $post->ID));
       }
+
+      // @todo HTML comment
+      // @todo data-id="123"
 
       $gallery_and_meta[$i]['ids_new'] = implode(',', $gallery_ids_new_array);
 
