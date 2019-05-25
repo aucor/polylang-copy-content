@@ -57,9 +57,9 @@ class PolylangCopyContent {
 
       // if Polylang Pro and content duplication is active, don't do anything
       $duplicate_options = get_user_meta( get_current_user_id(), 'pll_duplicate_content', true );
-      $is_polylang_pro_duplication_active = ! empty( $duplicate_options ) && ! empty( $duplicate_options[ $post_type ] );
+      $is_polylang_pro_duplication_active = ! empty( $duplicate_options ) && ! empty( $duplicate_options[ $post->post_type ] );
       if($is_polylang_pro_duplication_active) {
-        return; // Polylang Pro will handle content duplication
+        //return; // Polylang Pro will handle content duplication
       }
 
       $from_post_id = (int) $_GET['from_post'];
@@ -164,8 +164,6 @@ class PolylangCopyContent {
 
       $attachment = get_post($img_and_meta[$i]['id']);
 
-      // @todo HTML comment
-
       // check if given ID is really attachment (or copied from some other WordPress)
       if(empty($attachment) || $attachment->post_type !== 'attachment')
         continue;
@@ -181,7 +179,10 @@ class PolylangCopyContent {
       $img_and_meta[$i]['new_class'] = preg_replace('/wp-image-(\d+)/i', 'wp-image-' . $img_and_meta[$i]['new_id'], $img_and_meta[$i]['class']);
 
       // create new tag that is ready to replace the original
-      $img_and_meta[$i]['new_tag'] = preg_replace('/class="([^"]*)"/i', ' class="' . $img_and_meta[$i]['new_class'] . '"', $img_and_meta[$i]['tag']);
+      $img_and_meta[$i]['new_tag'] = preg_replace('/class="([^"]*)"/i', 'class="' . $img_and_meta[$i]['new_class'] . '"', $img_and_meta[$i]['tag']);
+
+      // replace data-id="123" from Gutenberg markup
+      $img_and_meta[$i]['new_tag'] = preg_replace('/data-id="([^"]*)"/i', 'data-id="' . $img_and_meta[$i]['new_id'] . '"', $img_and_meta[$i]['new_tag']);
 
       // replace image inside content
       $content = str_replace($img_and_meta[$i]['tag'], $img_and_meta[$i]['new_tag'], $content);
@@ -194,7 +195,33 @@ class PolylangCopyContent {
 
         // replace rel part as well
         $content = str_replace('rel="attachment wp-att-' . $attachment->ID . '"', 'rel="attachment wp-att-' . $img_and_meta[$i]['new_id'] . '"', $content);
+
       }
+
+      // find HTML comments like <!-- wp:image {"id":123} --> and replace them
+      preg_match_all('/<!-- wp:image {[^>]+} -->/i', $content, $comment_array);
+
+      if (empty($comment_array)) {
+        continue;
+      }
+
+      for ($j=0; $j < count($comment_array[0]); $j++) {
+
+        $comment_tag = $comment_array[0][$j];
+
+        // search for "id":123 pattern
+        preg_match('/"id":(\d*)/i', $comment_tag, $comment_tag_id);
+
+        // first match is enough, replace id carefully
+        if (isset($comment_tag_id[0]) && isset($comment_tag_id[1]) && $comment_tag_id[1] == $img_and_meta[$i]['id']) {
+
+          $new_id_tag = str_replace($comment_tag_id[1], $img_and_meta[$i]['new_id'], $comment_tag_id[0]);
+          $new_comment_tag = str_replace($comment_tag_id[0], $new_id_tag, $comment_tag);
+          $content = str_replace($comment_tag, $new_comment_tag, $content);
+        }
+
+      }
+
     }
 
     return $content;
@@ -332,9 +359,6 @@ class PolylangCopyContent {
         array_push($gallery_ids_new_array, $this->translate_attachment($id, $new_lang_slug, $post->ID));
       }
 
-      // @todo HTML comment
-      // @todo data-id="123"
-
       $gallery_and_meta[$i]['ids_new'] = implode(',', $gallery_ids_new_array);
 
       $gallery_and_meta[$i]['shortcode_new'] = preg_replace('/ ids="([^"]*)"/i', ' ids="' . $gallery_and_meta[$i]['ids_new'] . '"', $gallery_and_meta[$i]['shortcode']);
@@ -342,6 +366,34 @@ class PolylangCopyContent {
       // replace galleries in content
       $content = str_replace($gallery_and_meta[$i]['shortcode'], $gallery_and_meta[$i]['shortcode_new'], $content);
 
+    }
+
+    // find HTML comments like <!-- wp:gallery {"ids":[123,321]} --> and replace them (outside shortcode)
+    preg_match_all('/<!-- wp:gallery {[^>]+} -->/i', $content, $comment_array);
+
+    if (!empty($comment_array)) {
+      for ($j=0; $j < count($comment_array[0]); $j++) {
+
+        $comment_tag = $comment_array[0][$j];
+
+        // search for "ids":[123,321] pattern
+        preg_match('/"ids":\[(.*)\]/i', $comment_tag, $comment_tag_id);
+
+        // first match is enough, replace ids carefully
+        if (isset($comment_tag_id[0]) && isset($comment_tag_id[1])) {
+
+          $old_ids = explode(',', $comment_tag_id[1]);
+          $new_ids = array();
+          foreach ($old_ids as $id) {
+            $new_ids[] = $this->translate_attachment($id, $new_lang_slug, $post->ID);
+          }
+
+          $new_id_tag = str_replace($comment_tag_id[1], implode(',', $new_ids), $comment_tag_id[0]);
+          $new_comment_tag = str_replace($comment_tag_id[0], $new_id_tag, $comment_tag);
+          $content = str_replace($comment_tag, $new_comment_tag, $content);
+        }
+
+      }
     }
 
     return $content;
@@ -426,6 +478,17 @@ class PolylangCopyContent {
    */
   function translate_attachment($attachment_id, $new_lang, $parent_id) {
 
+    global $polylang_copy_content_attachment_cache;
+
+    if (empty($polylang_copy_content_attachment_cache)) {
+      $polylang_copy_content_attachment_cache = array();
+    }
+
+    // don't create multiple translations of same image on one request
+    if (isset($polylang_copy_content_attachment_cache[$attachment_id])) {
+      return $polylang_copy_content_attachment_cache[$attachment_id];
+    }
+
     $post = get_post($attachment_id);
 
     if(empty($post) || is_wp_error($post) || !in_array($post->post_type, array('attachment'))) {
@@ -466,6 +529,9 @@ class PolylangCopyContent {
 
     $translations[$new_lang] = $tr_id;
     PLL()->model->post->save_translations($tr_id, $translations);
+
+    // save ids to cache for multiple calls in same request
+    $polylang_copy_content_attachment_cache[$attachment_id] = $tr_id;
 
     return $tr_id; // newly translated attachment
   }
