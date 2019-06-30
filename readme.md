@@ -10,8 +10,9 @@
 
 ## Description
 
-Polylang Copy Content is an add-on for the multilingual WordPress plugin [Polylang](https://wordpress.org/plugins/polylang/). This add-on let's you copy the content and the title WPML style when creating a new translation. All the images and galleries are translated automatically if you use media translations.
+**⚠️ Status: In maintenance but not in very active development. [Polylang Pro](https://polylang.pro/) has this feature built-in and actively developed so I recommend supporting the creator of Polylang. ⚠️**
 
+Polylang Copy Content is an add-on for the multilingual WordPress plugin [Polylang](https://wordpress.org/plugins/polylang/). This add-on let's you copy the content and the title WPML style when creating a new translation. All the images and galleries are translated automatically if you use media translations.
 
 Basic feature list:
 
@@ -22,8 +23,37 @@ Basic feature list:
  * Use various filters to modify copied content in code (to be documented and expanded)
  * Translations are done with Polylang's functions, no messing around
 
-**The plugin is still in test phase and I'd like to get feedback and tackle a few issues before going to WordPress.org. Please, report issues and contribute!**
+## How copying content works?
 
+Copy content basically just copies and pastes all the content first. In this phase this plugin won't need to understand any markup so any shortcodes etc are copied.
+
+On second phase the plugin finds markup with regex, takes out the image IDs, makes or fetches the translation of the image and replaces these inside content. So the plugin can only replace translated images on the markup that this plugin undestands which is the default WordPress markup. If you have plugins that have their own fancy markup, blocks or shortcodes, this plugin copies them but will not process them.
+
+**Why processing images matter?** If you have media translations enabled, you are able to translate captions and alternative texts. These texts live mainly in attachments so while copying the content we need to also replace the attachments to avoid messing up the original images (overwriting the captions etc).
+
+## Copy Content + Classic Editor
+
+Works just fine. Copy content takes care of:
+
+ * Embedded images
+ * Galleries
+ * Featured image
+
+## Copy Content + Gutenberg
+
+Works okay. Copy conten takes care of:
+
+* Image blocks
+* Gallery blocks
+* Featured image
+
+Copy content won't process
+
+* Media & Text block (no captions)
+* Custom ACF blocks
+* Other blocks
+
+If you get "invalid content" error on some block after copying content, you might need to safe draft and refresh the page and it will go away. No idea why as the markup doesn't seem to change.
 
 ## Installation
 
@@ -52,11 +82,9 @@ $ composer require aucor/polylang-copy-content
 **Issues:**
 
  * Translating a link to a featured media page seems to make a broken link sometimes.
- * HTML is parsed with regex. [This might be a problem.](http://stackoverflow.com/a/1732454) ~~I will use PHP Simple HTML DOM Parser for HTML elements in the future and use regex for shortcodes~~. DOM Parsers bring new problems, let's not.
- * Translating featured image is somehow broken. The image can be translated and placed but if you'll try to edit the captions before the translation has been saved the first time the correct image is not selected in the media gallery. After you have saved it will work as it should.
  * Adding translation markup (fr translation) might be someting everybody won't like. Maybe I should ~~drop this in future or~~ make it optional.
 
- 
+
  **Feature whishlist:**
 
  * UI to handel wheteher you want to copy things and choose the language
